@@ -1,151 +1,1018 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DOTE 2023 Regulation Calculator</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f9; display: flex; justify-content: center; padding: 20px; }
-        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
-        h2 { color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; }
-        .tab-buttons { display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
-        button.tab { flex: 1; padding: 10px; border: none; background: #ddd; cursor: pointer; border-radius: 5px; font-weight: bold; min-width: 120px; }
-        button.active { background: #3498db; color: white; }
-        .input-group { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; margin-bottom: 5px; }
-        .row { display: flex; gap: 10px; }
-        .calc-btn { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .calc-btn:hover { background: #219150; }
-        #result { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; text-align: center; }
-        .success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
-        .add-row { background: #34495e; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-bottom: 10px; }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DOTE 2023 — Diploma Percentage Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* ─── CSS Variables ─────────────────────────────────────── */
+:root {
+  --bg:           #0b0f1a;
+  --bg2:          #111827;
+  --glass:        rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+  --glass-hover:  rgba(255,255,255,0.07);
+  --text:         #e8eaf6;
+  --text-muted:   #8892a4;
+  --accent:       #6ee7b7;
+  --accent2:      #38bdf8;
+  --accent3:      #f472b6;
+  --danger:       #fb7185;
+  --warn:         #fbbf24;
+  --success:      #34d399;
+  --card-shadow:  0 8px 32px rgba(0,0,0,0.4);
+  --radius:       16px;
+  --radius-sm:    8px;
+  --transition:   0.25s cubic-bezier(0.4,0,0.2,1);
+}
+[data-theme="light"] {
+  --bg:           #f0f4ff;
+  --bg2:          #ffffff;
+  --glass:        rgba(255,255,255,0.7);
+  --glass-border: rgba(99,102,241,0.15);
+  --glass-hover:  rgba(99,102,241,0.08);
+  --text:         #1e293b;
+  --text-muted:   #64748b;
+  --accent:       #059669;
+  --accent2:      #0284c7;
+  --accent3:      #db2777;
+  --card-shadow:  0 8px 32px rgba(99,102,241,0.12);
+}
+
+/* ─── Reset & Base ──────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Sora',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  line-height:1.6;
+  overflow-x:hidden;
+}
+/* animated gradient background */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 10%, rgba(110,231,183,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(56,189,248,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(244,114,182,0.04) 0%, transparent 60%);
+  pointer-events:none;
+  z-index:0;
+}
+[data-theme="light"] body::before{
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 10%, rgba(5,150,105,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(2,132,199,0.08) 0%, transparent 60%);
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--glass-border);border-radius:99px}
+
+/* ─── Layout ────────────────────────────────────────────── */
+.wrap{max-width:1100px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
+
+/* ─── Glass card ─────────────────────────────────────────── */
+.glass{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius);
+  box-shadow:var(--card-shadow);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+}
+.glass:hover{background:var(--glass-hover)}
+
+/* ─── Header ─────────────────────────────────────────────── */
+header{
+  padding:32px 0 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:16px;
+}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-icon{
+  width:48px;height:48px;border-radius:14px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;
+  box-shadow:0 4px 20px rgba(110,231,183,0.3);
+}
+.logo-text h1{font-size:1.35rem;font-weight:700;letter-spacing:-0.02em}
+.logo-text p{font-size:0.78rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.header-actions{display:flex;gap:10px;align-items:center}
+
+/* ─── Buttons ────────────────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 18px;border-radius:var(--radius-sm);
+  font-family:'Sora',sans-serif;font-size:0.85rem;font-weight:500;
+  cursor:pointer;border:none;outline:none;
+  transition:all var(--transition);white-space:nowrap;
+}
+.btn-ghost{
+  background:var(--glass);border:1px solid var(--glass-border);
+  color:var(--text);
+}
+.btn-ghost:hover{background:var(--glass-hover);transform:translateY(-1px)}
+.btn-primary{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#0b0f1a;font-weight:600;
+  box-shadow:0 4px 16px rgba(110,231,183,0.25);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(110,231,183,0.35)}
+.btn-danger{background:rgba(251,113,133,0.15);border:1px solid rgba(251,113,133,0.3);color:var(--danger)}
+.btn-danger:hover{background:rgba(251,113,133,0.25)}
+.btn-sm{padding:6px 12px;font-size:0.8rem}
+.btn:disabled{opacity:0.45;pointer-events:none}
+
+/* ─── Toggle switch ──────────────────────────────────────── */
+.toggle-wrap{display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--text-muted)}
+.toggle{
+  width:42px;height:24px;border-radius:99px;
+  background:var(--glass-border);
+  border:1px solid var(--glass-border);
+  cursor:pointer;position:relative;transition:background var(--transition);
+}
+.toggle.on{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.toggle::after{
+  content:'';position:absolute;top:3px;left:3px;
+  width:16px;height:16px;border-radius:50%;
+  background:#fff;transition:transform var(--transition);
+}
+.toggle.on::after{transform:translateX(18px)}
+
+/* ─── Config section ─────────────────────────────────────── */
+.config-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;margin-bottom:28px;
+}
+.config-card{padding:20px;border-radius:var(--radius)}
+.config-card label{font-size:0.78rem;color:var(--text-muted);letter-spacing:0.05em;text-transform:uppercase;font-weight:500;display:block;margin-bottom:10px}
+
+/* ─── Selects & Inputs ───────────────────────────────────── */
+select,input[type="number"],input[type="text"]{
+  width:100%;padding:10px 14px;
+  background:var(--glass);border:1px solid var(--glass-border);
+  color:var(--text);border-radius:var(--radius-sm);
+  font-family:'Sora',sans-serif;font-size:0.88rem;
+  outline:none;transition:border-color var(--transition);
+  -webkit-appearance:none;
+}
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238892a4' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;
+  padding-right:36px;cursor:pointer;
+}
+select:focus,input:focus{border-color:var(--accent)}
+select option{background:var(--bg2);color:var(--text)}
+input[type="number"]::-webkit-inner-spin-button{opacity:0.4}
+
+/* ─── Segments (entry mode) ──────────────────────────────── */
+.segments{display:flex;gap:4px;background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:4px}
+.seg{flex:1;padding:8px;text-align:center;border-radius:6px;font-size:0.84rem;font-weight:500;cursor:pointer;transition:all var(--transition);color:var(--text-muted)}
+.seg.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b0f1a;font-weight:600}
+
+/* ─── Semester tabs ──────────────────────────────────────── */
+.sem-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.sem-tab{
+  padding:8px 18px;border-radius:99px;font-size:0.82rem;font-weight:500;
+  border:1px solid var(--glass-border);background:var(--glass);
+  cursor:pointer;color:var(--text-muted);transition:all var(--transition);
+}
+.sem-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0b0f1a;border-color:transparent}
+.sem-tab:hover:not(.active){background:var(--glass-hover);color:var(--text)}
+
+/* ─── Semester panel ─────────────────────────────────────── */
+.sem-panel{display:none}
+.sem-panel.active{display:block;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.sem-header{
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;margin-bottom:18px;padding:16px 20px;
+  border-radius:var(--radius);
+  background:linear-gradient(135deg,rgba(110,231,183,0.08),rgba(56,189,248,0.08));
+  border:1px solid rgba(110,231,183,0.15);
+}
+.sem-header h3{font-size:1rem;font-weight:600}
+.sem-gpa-live{
+  font-family:'JetBrains Mono',monospace;
+  font-size:1.1rem;color:var(--accent);font-weight:500;
+  padding:6px 14px;background:rgba(110,231,183,0.1);
+  border-radius:99px;border:1px solid rgba(110,231,183,0.2);
+}
+
+/* ─── Subject table ──────────────────────────────────────── */
+.subjects-table{width:100%;border-collapse:separate;border-spacing:0 8px}
+.subjects-table th{
+  font-size:0.73rem;text-transform:uppercase;letter-spacing:0.06em;
+  color:var(--text-muted);font-weight:500;padding:4px 10px;text-align:left;
+}
+.subjects-table td{padding:4px 6px}
+.subject-row td:first-child{padding-left:10px}
+.subject-row td:last-child{padding-right:10px;text-align:center}
+.subject-row input,.subject-row select{margin:0}
+.credit-input{width:72px!important}
+.grade-select{width:110px!important}
+.name-input{width:100%}
+.subject-badge{
+  display:inline-block;width:28px;height:28px;
+  background:var(--glass);border:1px solid var(--glass-border);
+  border-radius:6px;font-size:0.75rem;color:var(--text-muted);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;
+}
+.del-btn{
+  width:30px;height:30px;border-radius:6px;border:none;cursor:pointer;
+  background:rgba(251,113,133,0.1);color:var(--danger);
+  display:flex;align-items:center;justify-content:center;
+  transition:all var(--transition);font-size:16px;
+}
+.del-btn:hover{background:rgba(251,113,133,0.25);transform:scale(1.1)}
+.add-subject-row{margin-top:12px;display:flex;align-items:center;gap:10px}
+
+/* ─── Grade pill ─────────────────────────────────────────── */
+.grade-badge{
+  font-family:'JetBrains Mono',monospace;font-size:0.7rem;
+  padding:3px 8px;border-radius:4px;font-weight:500;
+  display:inline-block;
+}
+.grade-O   {background:rgba(110,231,183,0.15);color:#6ee7b7}
+.grade-Ap  {background:rgba(56,189,248,0.15);color:#38bdf8}
+.grade-A   {background:rgba(99,102,241,0.15);color:#a5b4fc}
+.grade-Bp  {background:rgba(168,85,247,0.15);color:#c084fc}
+.grade-B   {background:rgba(251,191,36,0.15);color:#fbbf24}
+.grade-C   {background:rgba(251,146,60,0.15);color:#fb923c}
+.grade-RA  {background:rgba(251,113,133,0.15);color:#fb7185}
+
+/* ─── Results dashboard ──────────────────────────────────── */
+#results-section{display:none}
+#results-section.show{display:block;animation:fadeIn 0.5s ease}
+.results-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:16px;margin-bottom:24px;
+}
+.result-card{
+  padding:24px 20px;border-radius:var(--radius);text-align:center;
+  position:relative;overflow:hidden;
+}
+.result-card::before{
+  content:'';position:absolute;inset:0;
+  background:inherit;filter:blur(30px);opacity:0.5;z-index:-1;
+}
+.result-card.main{
+  background:linear-gradient(135deg,rgba(110,231,183,0.12),rgba(56,189,248,0.12));
+  border:1px solid rgba(110,231,183,0.25);grid-column:span 2;
+}
+@media(max-width:600px){.result-card.main{grid-column:span 1}}
+.result-label{font-size:0.73rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);font-weight:500;margin-bottom:8px}
+.result-value{font-size:2.4rem;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:-0.03em;line-height:1}
+.result-sub{font-size:0.8rem;color:var(--text-muted);margin-top:6px}
+.result-value.accent{color:var(--accent)}
+.result-value.blue{color:var(--accent2)}
+.result-value.pink{color:var(--accent3)}
+
+/* Class division badge */
+.division-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 20px;border-radius:99px;font-size:0.88rem;font-weight:600;
+  margin-top:12px;
+}
+.div-distinction{background:linear-gradient(135deg,rgba(110,231,183,0.2),rgba(56,189,248,0.2));border:1px solid rgba(110,231,183,0.4);color:var(--accent)}
+.div-first{background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.3);color:var(--accent2)}
+.div-second{background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.3);color:var(--warn)}
+.div-pass{background:rgba(251,146,60,0.15);border:1px solid rgba(251,146,60,0.3);color:#fb923c}
+.div-fail{background:rgba(251,113,133,0.15);border:1px solid rgba(251,113,133,0.3);color:var(--danger)}
+
+/* Semester GPA bars */
+.sem-bars{margin-top:24px}
+.sem-bar-row{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.sem-bar-label{font-size:0.8rem;color:var(--text-muted);width:48px;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.sem-bar-track{flex:1;height:8px;background:var(--glass-border);border-radius:99px;overflow:hidden}
+.sem-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 1s cubic-bezier(0.4,0,0.2,1)}
+.sem-bar-val{font-size:0.8rem;font-family:'JetBrains Mono',monospace;color:var(--text);width:36px;text-align:right}
+
+/* ─── Grade reference table ──────────────────────────────── */
+.grade-ref{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.gref{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid var(--glass-border);min-width:56px;font-size:0.75rem}
+.gref-pt{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700}
+.gref-label{color:var(--text-muted);font-size:0.68rem}
+
+/* ─── Sections ───────────────────────────────────────────── */
+.section-title{
+  font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;
+  color:var(--text-muted);font-weight:600;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.section-title::after{content:'';flex:1;height:1px;background:var(--glass-border)}
+.section{margin-bottom:32px}
+
+/* ─── Info banner ────────────────────────────────────────── */
+.info-banner{
+  padding:14px 18px;border-radius:var(--radius-sm);
+  background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);
+  font-size:0.82rem;color:var(--text-muted);display:flex;gap:10px;align-items:flex-start;
+  margin-bottom:24px;line-height:1.6;
+}
+.info-banner svg{flex-shrink:0;margin-top:2px;color:var(--accent2)}
+
+/* ─── Footer ─────────────────────────────────────────────── */
+footer{padding:32px 0;text-align:center;font-size:0.78rem;color:var(--text-muted);border-top:1px solid var(--glass-border);margin-top:40px}
+
+/* ─── Responsive ─────────────────────────────────────────── */
+@media(max-width:640px){
+  .logo-text h1{font-size:1.1rem}
+  .subjects-table{display:block;overflow-x:auto}
+}
+
+/* ─── Tooltip ────────────────────────────────────────────── */
+.tooltip{position:relative}
+.tooltip:hover::after{
+  content:attr(data-tip);
+  position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:var(--bg2);color:var(--text);font-size:0.74rem;padding:5px 10px;
+  border-radius:6px;white-space:nowrap;border:1px solid var(--glass-border);
+  pointer-events:none;z-index:10;
+}
+
+/* ─── Loading flash ──────────────────────────────────────── */
+.calc-flash{
+  animation:flash 0.4s ease;
+}
+@keyframes flash{
+  0%{opacity:0.4}100%{opacity:1}
+}
+
+/* ─── Print / PDF ────────────────────────────────────────── */
+@media print{
+  body::before,.header-actions,#calculator-section,.sem-tabs,.btn{display:none!important}
+  #results-section{display:block!important}
+}
+</style>
 </head>
 <body>
 
-<div class="container">
-    <h2>DOTE 2023 Calculator</h2>
-    
-    <div class="tab-buttons">
-        <button class="tab active" onclick="switchTab('semester')">Semester GPA</button>
-        <button class="tab" onclick="switchTab('regular')">Regular (6 Sem) %</button>
-        <button class="tab" onclick="switchTab('lateral')">Lateral (4 Sem) %</button>
+<div class="wrap">
+<!-- ─── HEADER ───────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🎓</div>
+    <div class="logo-text">
+      <h1>DOTE Regulation 2023</h1>
+      <p>Diploma Percentage Calculator · Tamil Nadu</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="toggle-wrap">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <div class="toggle" id="themeToggle" onclick="toggleTheme()"></div>
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <button class="btn btn-ghost btn-sm tooltip" data-tip="Save to browser" onclick="saveToStorage()">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2"/><polyline points="17 21 17 13 7 13 7 21" stroke="currentColor" stroke-width="2"/><polyline points="7 3 7 8 15 8" stroke="currentColor" stroke-width="2"/></svg>
+      Save
+    </button>
+    <button class="btn btn-ghost btn-sm tooltip" data-tip="Clear all data" onclick="clearAll()">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2"/><path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Clear
+    </button>
+  </div>
+</header>
+
+<!-- ─── CALCULATOR SECTION ───────────────────────────────── -->
+<section id="calculator-section">
+
+  <!-- Config -->
+  <div class="section">
+    <div class="section-title">Configuration</div>
+    <div class="config-grid">
+
+      <div class="config-card glass">
+        <label>Entry Mode</label>
+        <div class="segments">
+          <div class="seg active" id="seg-regular" onclick="setEntryMode('regular')">Regular (Sem 1–6)</div>
+          <div class="seg" id="seg-lateral" onclick="setEntryMode('lateral')">Lateral (Sem 3–6)</div>
+        </div>
+      </div>
+
+      <div class="config-card glass">
+        <label>Pathway (3rd Year)</label>
+        <select id="pathway-select" onchange="saveState()">
+          <option value="general">General / Common</option>
+          <option value="tech">Technology Pathway</option>
+          <option value="mgmt">Management Pathway</option>
+          <option value="eng">Engineering Pathway</option>
+        </select>
+      </div>
+
+      <div class="config-card glass">
+        <label>Special Options</label>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+          <label style="display:flex;align-items:center;gap:10px;text-transform:none;letter-spacing:0;font-size:0.84rem;cursor:pointer;color:var(--text)">
+            <input type="checkbox" id="fasttrack-toggle" style="width:auto;accent-color:var(--accent)" onchange="toggleFastTrack()">
+            Fast-Track Mode
+            <span style="font-size:0.72rem;color:var(--text-muted)">(Sem 6 → Sem 5)</span>
+          </label>
+        </div>
+      </div>
+
     </div>
 
-    <div id="ui-description" style="font-size: 0.9em; color: #666; margin-bottom: 15px;"></div>
+    <!-- Grade Reference -->
+    <div class="section-title">Grade Reference — Regulation 2023</div>
+    <div class="grade-ref">
+      <div class="gref"><div class="gref-pt" style="color:#6ee7b7">10</div><div class="grade-badge grade-O">O</div><div class="gref-label">Outstanding</div></div>
+      <div class="gref"><div class="gref-pt" style="color:#38bdf8">9</div><div class="grade-badge grade-Ap">A+</div><div class="gref-label">Excellent</div></div>
+      <div class="gref"><div class="gref-pt" style="color:#a5b4fc">8</div><div class="grade-badge grade-A">A</div><div class="gref-label">Very Good</div></div>
+      <div class="gref"><div class="gref-pt" style="color:#c084fc">7</div><div class="grade-badge grade-Bp">B+</div><div class="gref-label">Good</div></div>
+      <div class="gref"><div class="gref-pt" style="color:#fbbf24">6</div><div class="grade-badge grade-B">B</div><div class="gref-label">Average</div></div>
+      <div class="gref"><div class="gref-pt" style="color:#fb923c">5</div><div class="grade-badge grade-C">C</div><div class="gref-label">Satisfactory</div></div>
+      <div class="gref"><div class="gref-pt" style="color:#fb7185">—</div><div class="grade-badge grade-RA">RA</div><div class="gref-label">Reappear</div></div>
+    </div>
+    <div style="font-size:0.76rem;color:var(--text-muted);margin-top:10px">
+      ⚠️  Fail condition: Total marks &lt; 40% <em>or</em> End-semester exam &lt; 35%
+    </div>
+  </div>
 
-    <div id="inputs-container"></div>
+  <!-- Semester Panels -->
+  <div class="section">
+    <div class="section-title">Semester-wise Entry</div>
+    <div class="sem-tabs" id="sem-tabs"></div>
+    <div id="sem-panels"></div>
+  </div>
 
-    <div id="extra-controls"></div>
+  <!-- Action buttons -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:40px">
+    <button class="btn btn-primary" onclick="calculateAll()">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2" stroke="currentColor" stroke-width="2"/><line x1="8" y1="10" x2="16" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="14" x2="13" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Calculate CGPA & Percentage
+    </button>
+    <button class="btn btn-ghost" onclick="document.getElementById('results-section').scrollIntoView({behavior:'smooth'})">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Jump to Results
+    </button>
+  </div>
+</section>
 
-    <button class="calc-btn" onclick="calculate()">Calculate Result</button>
+<!-- ─── RESULTS SECTION ──────────────────────────────────── -->
+<section id="results-section">
+  <div class="section-title">Results Dashboard</div>
 
-    <div id="result"></div>
+  <div class="results-grid" id="results-grid">
+    <!-- filled by JS -->
+  </div>
+
+  <div class="sem-bars" id="sem-bars"></div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:28px">
+    <button class="btn btn-primary" onclick="downloadPDF()">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="currentColor" stroke-width="2"/><polyline points="7 10 12 15 17 10" stroke="currentColor" stroke-width="2"/><line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2"/></svg>
+      Download Result as PDF
+    </button>
+    <button class="btn btn-ghost" onclick="recalculate()">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10" stroke="currentColor" stroke-width="2"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10" stroke="currentColor" stroke-width="2"/></svg>
+      Recalculate
+    </button>
+  </div>
+</section>
+
+<footer>
+  DOTE Regulation 2023 · Diploma of Technology · Tamil Nadu · Built for students 🎓
+  <br><span style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;opacity:0.5">GPA = Σ(GP×Credits)/ΣCredits · Percentage = CGPA×10</span>
+</footer>
 </div>
 
+<!-- ─── JAVASCRIPT ────────────────────────────────────────── -->
 <script>
-    let currentMode = 'semester';
-    const grades = { "O": 10, "A+": 9, "A": 8, "B+": 7, "B": 6, "C": 5, "RA": 0 };
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+const GRADES = {
+  'O':  10, 'A+': 9, 'A': 8,
+  'B+': 7,  'B':  6, 'C': 5,
+  'RA': null
+};
+const GRADE_KEYS = Object.keys(GRADES);
+const STORAGE_KEY = 'dote2023_calc';
 
-    function switchTab(mode) {
-        currentMode = mode;
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        event.target.classList.add('active');
-        renderUI();
+let state = {
+  mode: 'regular',       // 'regular' | 'lateral'
+  pathway: 'general',
+  fastTrack: false,
+  activeSem: 1,
+  semesters: {}          // semN → [{name,credit,grade}]
+};
+
+function getSemList() {
+  return state.mode === 'regular'
+    ? [1,2,3,4,5,6]
+    : [3,4,5,6];
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  loadFromStorage();
+  renderAll();
+  loadTheme();
+});
+
+function renderAll() {
+  renderTabs();
+  renderPanels();
+  updateActiveSem(state.activeSem);
+  // sync config UI
+  document.getElementById('pathway-select').value = state.pathway;
+  document.getElementById('fasttrack-toggle').checked = state.fastTrack;
+  document.getElementById('seg-regular').classList.toggle('active', state.mode === 'regular');
+  document.getElementById('seg-lateral').classList.toggle('active', state.mode === 'lateral');
+}
+
+/* ═══════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════ */
+function renderTabs() {
+  const sems = getSemList();
+  const container = document.getElementById('sem-tabs');
+  container.innerHTML = sems.map(s =>
+    `<div class="sem-tab ${s===state.activeSem?'active':''}" onclick="updateActiveSem(${s})">Semester ${s}</div>`
+  ).join('');
+}
+
+function updateActiveSem(sem) {
+  const sems = getSemList();
+  if (!sems.includes(sem)) sem = sems[0];
+  state.activeSem = sem;
+  document.querySelectorAll('.sem-tab').forEach((t,i) => {
+    t.classList.toggle('active', sems[i] === sem);
+  });
+  document.querySelectorAll('.sem-panel').forEach(p => {
+    p.classList.toggle('active', +p.dataset.sem === sem);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   PANELS
+═══════════════════════════════════════════ */
+function renderPanels() {
+  const sems = getSemList();
+  const container = document.getElementById('sem-panels');
+  container.innerHTML = '';
+  sems.forEach(s => {
+    if (!state.semesters[s]) state.semesters[s] = defaultSubjects(s);
+    const panel = document.createElement('div');
+    panel.className = 'sem-panel glass';
+    panel.dataset.sem = s;
+    panel.style.padding = '20px';
+    panel.innerHTML = buildPanelHTML(s);
+    container.appendChild(panel);
+  });
+}
+
+function defaultSubjects(sem) {
+  // Give a sensible default count based on typical DOTE structure
+  const count = (sem <= 2) ? 6 : 7;
+  return Array.from({length: count}, (_,i) => ({
+    name: `Subject ${i+1}`, credit: 3, grade: 'O'
+  }));
+}
+
+function buildPanelHTML(sem) {
+  const subjects = state.semesters[sem];
+  const gpa = calcSemGPA(sem);
+  const gpaText = gpa !== null ? gpa.toFixed(2) : '—';
+
+  let rows = subjects.map((sub,idx) => buildSubjectRow(sem, idx, sub)).join('');
+
+  return `
+    <div class="sem-header">
+      <h3>Semester ${sem}</h3>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:0.8rem;color:var(--text-muted)">Live GPA</span>
+        <div class="sem-gpa-live" id="gpa-live-${sem}">${gpaText}</div>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="subjects-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Subject Name</th>
+          <th>Credits</th>
+          <th>Grade</th>
+          <th>Points</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody-${sem}">${rows}</tbody>
+    </table>
+    </div>
+    <div class="add-subject-row">
+      <button class="btn btn-ghost btn-sm" onclick="addSubject(${sem})">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="16" stroke="currentColor" stroke-width="2"/><line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2"/></svg>
+        Add Subject
+      </button>
+      <span style="font-size:0.78rem;color:var(--text-muted)">${subjects.length} subject${subjects.length!==1?'s':''} · ${totalCredits(sem)} credits total</span>
+    </div>
+  `;
+}
+
+function buildSubjectRow(sem, idx, sub) {
+  const gradeClass = {
+    'O':'grade-O','A+':'grade-Ap','A':'grade-A',
+    'B+':'grade-Bp','B':'grade-B','C':'grade-C','RA':'grade-RA'
+  }[sub.grade] || '';
+  const points = GRADES[sub.grade] !== null && GRADES[sub.grade] !== undefined
+    ? `<span class="grade-badge ${gradeClass}">${GRADES[sub.grade] ?? '—'}</span>`
+    : `<span class="grade-badge grade-RA">RA</span>`;
+
+  const opts = GRADE_KEYS.map(g =>
+    `<option value="${g}" ${g===sub.grade?'selected':''}>${g}</option>`
+  ).join('');
+
+  return `
+    <tr class="subject-row" id="row-${sem}-${idx}">
+      <td><div class="subject-badge">${idx+1}</div></td>
+      <td><input type="text" class="name-input" value="${escHtml(sub.name)}" placeholder="Subject name"
+          oninput="updateSubject(${sem},${idx},'name',this.value)" /></td>
+      <td><input type="number" class="credit-input" value="${sub.credit}" min="1" max="6" step="1"
+          oninput="updateSubject(${sem},${idx},'credit',+this.value)" /></td>
+      <td>
+        <select class="grade-select" onchange="updateSubject(${sem},${idx},'grade',this.value)">
+          ${opts}
+        </select>
+      </td>
+      <td style="text-align:center">${points}</td>
+      <td><button class="del-btn" onclick="removeSubject(${sem},${idx})" title="Remove">×</button></td>
+    </tr>
+  `;
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ═══════════════════════════════════════════
+   SUBJECT CRUD
+═══════════════════════════════════════════ */
+function addSubject(sem) {
+  state.semesters[sem].push({name:`Subject ${state.semesters[sem].length+1}`, credit:3, grade:'O'});
+  refreshPanel(sem);
+  saveState();
+}
+
+function removeSubject(sem, idx) {
+  if (state.semesters[sem].length <= 1) return;
+  state.semesters[sem].splice(idx, 1);
+  refreshPanel(sem);
+  saveState();
+}
+
+function updateSubject(sem, idx, field, val) {
+  if (field === 'credit') {
+    val = Math.max(1, Math.min(6, isNaN(val) ? 1 : val));
+  }
+  state.semesters[sem][idx][field] = val;
+  refreshGPALive(sem);
+  refreshPoints(sem, idx);
+  saveState();
+}
+
+function refreshPanel(sem) {
+  const panel = document.querySelector(`.sem-panel[data-sem="${sem}"]`);
+  if (!panel) return;
+  panel.innerHTML = buildPanelHTML(sem);
+}
+
+function refreshGPALive(sem) {
+  const el = document.getElementById(`gpa-live-${sem}`);
+  if (!el) return;
+  const gpa = calcSemGPA(sem);
+  el.textContent = gpa !== null ? gpa.toFixed(2) : '—';
+  el.classList.add('calc-flash');
+  setTimeout(() => el.classList.remove('calc-flash'), 400);
+}
+
+function refreshPoints(sem, idx) {
+  const sub = state.semesters[sem][idx];
+  const row = document.getElementById(`row-${sem}-${idx}`);
+  if (!row) return;
+  const td = row.querySelector('td:nth-child(5)');
+  if (!td) return;
+  const gradeClass = {
+    'O':'grade-O','A+':'grade-Ap','A':'grade-A',
+    'B+':'grade-Bp','B':'grade-B','C':'grade-C','RA':'grade-RA'
+  }[sub.grade] || '';
+  const pts = GRADES[sub.grade];
+  td.innerHTML = pts !== undefined && pts !== null
+    ? `<span class="grade-badge ${gradeClass}">${pts}</span>`
+    : `<span class="grade-badge grade-RA">RA</span>`;
+}
+
+/* ═══════════════════════════════════════════
+   CALCULATION
+═══════════════════════════════════════════ */
+function calcSemGPA(sem) {
+  const subs = state.semesters[sem];
+  if (!subs || !subs.length) return null;
+  let weightedSum = 0, totalCred = 0, hasRA = false;
+  subs.forEach(s => {
+    const gp = GRADES[s.grade];
+    const cr = +s.credit || 0;
+    if (gp === null) { hasRA = true; return; }
+    if (gp !== undefined && cr > 0) {
+      weightedSum += gp * cr;
+      totalCred += cr;
     }
+  });
+  if (hasRA) return null; // has fail
+  if (totalCred === 0) return null;
+  return Math.min(10, weightedSum / totalCred);
+}
 
-    function renderUI() {
-        const container = document.getElementById('inputs-container');
-        const controls = document.getElementById('extra-controls');
-        const desc = document.getElementById('ui-description');
-        const resultDiv = document.getElementById('result');
-        resultDiv.style.display = 'none';
-        
-        let html = '';
-        controls.innerHTML = '';
+function totalCredits(sem) {
+  return (state.semesters[sem] || []).reduce((s,sub) => s + (+sub.credit || 0), 0);
+}
 
-        if (currentMode === 'semester') {
-            desc.innerHTML = "Enter credits and grade for each subject in the semester.";
-            html = `<div id="subject-list">` + Array(5).fill(0).map(() => getSubjectRow()).join('') + `</div>`;
-            controls.innerHTML = `<button class="add-row" onclick="addSubject()">+ Add Subject</button>`;
-        } else {
-            const isLateral = currentMode === 'lateral';
-            const count = isLateral ? 4 : 6;
-            const start = isLateral ? 3 : 1;
-            desc.innerHTML = `Enter the overall GPA for each semester (${isLateral ? '3-6' : '1-6'}).`;
-            for (let i = 0; i < count; i++) {
-                html += `
-                    <div class="input-group">
-                        <label>Semester ${start + i} GPA:</label>
-                        <input type="number" step="0.01" class="gpa-input" placeholder="e.g. 8.5">
-                    </div>`;
-            }
-        }
-        container.innerHTML = html;
+function calculateAll() {
+  const sems = getSemList();
+  const semGPAs = {};
+  let hasNull = false;
+  sems.forEach(s => {
+    const g = calcSemGPA(s);
+    semGPAs[s] = g;
+    if (g === null) hasNull = true;
+  });
+
+  const validGPAs = Object.values(semGPAs).filter(g => g !== null);
+  const cgpa = validGPAs.length
+    ? validGPAs.reduce((a,b) => a+b, 0) / (state.mode === 'regular' ? 6 : 4)
+    : 0;
+  const percentage = cgpa * 10;
+  const totalCred = sems.reduce((s,sem) => s + totalCredits(sem), 0);
+
+  const division = getDivision(cgpa, hasNull);
+
+  renderResults(semGPAs, cgpa, percentage, totalCred, division, hasNull);
+  document.getElementById('results-section').classList.add('show');
+  setTimeout(() => {
+    document.getElementById('results-section').scrollIntoView({behavior:'smooth', block:'start'});
+  }, 100);
+}
+
+function getDivision(cgpa, hasRA) {
+  if (hasRA) return {label:'Fail / RA Pending', cls:'div-fail', icon:'❌'};
+  if (cgpa >= 7.5) return {label:'First Class with Distinction', cls:'div-distinction', icon:'🏆'};
+  if (cgpa >= 6.0) return {label:'First Class', cls:'div-first', icon:'🥇'};
+  if (cgpa >= 5.0) return {label:'Second Class', cls:'div-second', icon:'🥈'};
+  if (cgpa >= 4.0) return {label:'Pass Class', cls:'div-pass', icon:'✅'};
+  return {label:'Fail', cls:'div-fail', icon:'❌'};
+}
+
+function renderResults(semGPAs, cgpa, percentage, totalCred, division, hasRA) {
+  const grid = document.getElementById('results-grid');
+
+  grid.innerHTML = `
+    <div class="result-card glass main" style="grid-column:span 2">
+      <div class="result-label">Overall CGPA</div>
+      <div class="result-value accent">${cgpa.toFixed(2)}</div>
+      <div class="result-sub">Out of 10.00</div>
+      <div class="division-badge ${division.cls}">${division.icon} ${division.label}</div>
+    </div>
+    <div class="result-card glass">
+      <div class="result-label">Final Percentage</div>
+      <div class="result-value blue">${percentage.toFixed(1)}%</div>
+      <div class="result-sub">CGPA × 10</div>
+    </div>
+    <div class="result-card glass">
+      <div class="result-label">Total Credits</div>
+      <div class="result-value pink">${totalCred}</div>
+      <div class="result-sub">Across ${Object.keys(semGPAs).length} semesters</div>
+    </div>
+    <div class="result-card glass">
+      <div class="result-label">Mode</div>
+      <div class="result-value" style="font-size:1.4rem">${state.mode==='regular'?'Regular':'Lateral'}</div>
+      <div class="result-sub">${state.pathway} pathway</div>
+    </div>
+    <div class="result-card glass">
+      <div class="result-label">Status</div>
+      <div class="result-value" style="font-size:1.4rem">${hasRA?'⚠️ RA':'✅ Clear'}</div>
+      <div class="result-sub">${hasRA?'Has Reappear subjects':'All semesters clear'}</div>
+    </div>
+  `;
+
+  // Bars
+  const barsEl = document.getElementById('sem-bars');
+  barsEl.innerHTML = `<div style="font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:14px;font-weight:500">Semester-wise GPA Breakdown</div>`;
+  Object.entries(semGPAs).forEach(([sem, gpa]) => {
+    const pct = gpa !== null ? (gpa / 10 * 100) : 0;
+    const label = gpa !== null ? gpa.toFixed(2) : 'RA';
+    const color = gpa === null ? '#fb7185' : gpa >= 7.5 ? '#6ee7b7' : gpa >= 6 ? '#38bdf8' : '#fbbf24';
+    barsEl.innerHTML += `
+      <div class="sem-bar-row">
+        <div class="sem-bar-label">Sem ${sem}</div>
+        <div class="sem-bar-track">
+          <div class="sem-bar-fill" style="width:${pct}%;background:${gpa===null?'#fb7185':'linear-gradient(90deg,'+color+','+color+'aa)'}"></div>
+        </div>
+        <div class="sem-bar-val" style="color:${color}">${label}</div>
+      </div>
+    `;
+  });
+}
+
+function recalculate() {
+  document.getElementById('results-section').classList.remove('show');
+  document.getElementById('calculator-section').scrollIntoView({behavior:'smooth'});
+}
+
+/* ═══════════════════════════════════════════
+   MODE CONTROLS
+═══════════════════════════════════════════ */
+function setEntryMode(mode) {
+  state.mode = mode;
+  state.activeSem = mode === 'regular' ? 1 : 3;
+  document.getElementById('seg-regular').classList.toggle('active', mode==='regular');
+  document.getElementById('seg-lateral').classList.toggle('active', mode==='lateral');
+  renderTabs();
+  renderPanels();
+  updateActiveSem(state.activeSem);
+  saveState();
+}
+
+function toggleFastTrack() {
+  state.fastTrack = document.getElementById('fasttrack-toggle').checked;
+  saveState();
+}
+
+/* ═══════════════════════════════════════════
+   THEME
+═══════════════════════════════════════════ */
+function toggleTheme() {
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  document.documentElement.dataset.theme = isDark ? 'light' : 'dark';
+  document.getElementById('themeToggle').classList.toggle('on', !isDark);
+  localStorage.setItem('dote_theme', isDark ? 'light' : 'dark');
+}
+function loadTheme() {
+  const saved = localStorage.getItem('dote_theme') || 'dark';
+  document.documentElement.dataset.theme = saved;
+  document.getElementById('themeToggle').classList.toggle('on', saved === 'light');
+}
+
+/* ═══════════════════════════════════════════
+   LOCAL STORAGE
+═══════════════════════════════════════════ */
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+function saveToStorage() {
+  saveState();
+  const btn = event.target.closest('.btn');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '✅ Saved!';
+  setTimeout(() => { btn.innerHTML = orig; }, 1500);
+}
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      state = { ...state, ...saved };
     }
+  } catch(e) { /* ignore */ }
+}
+function clearAll() {
+  if (!confirm('Clear all entered data? This cannot be undone.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = { mode:'regular', pathway:'general', fastTrack:false, activeSem:1, semesters:{} };
+  renderAll();
+  document.getElementById('results-section').classList.remove('show');
+}
 
-    function getSubjectRow() {
-        return `
-            <div class="input-group subject-row">
-                <div class="row">
-                    <input type="number" class="sub-credit" placeholder="Credits (e.g. 3)" style="flex: 1;">
-                    <select class="sub-grade" style="flex: 1;">
-                        <option value="">Select Grade</option>
-                        <option value="O">O (Outstanding)</option>
-                        <option value="A+">A+ (Excellent)</option>
-                        <option value="A">A (Very Good)</option>
-                        <option value="B+">B+ (Good)</option>
-                        <option value="B">B (Average)</option>
-                        <option value="C">C (Satisfactory)</option>
-                        <option value="RA">RA (Re-Appearance)</option>
-                    </select>
-                </div>
-            </div>`;
-    }
+/* ═══════════════════════════════════════════
+   PDF EXPORT
+═══════════════════════════════════════════ */
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const sems = getSemList();
+  const margin = 20;
+  let y = margin;
+  const W = 210 - margin*2;
 
-    function addSubject() {
-        const div = document.createElement('div');
-        div.innerHTML = getSubjectRow();
-        document.getElementById('subject-list').appendChild(div);
-    }
+  // Header gradient bar
+  doc.setFillColor(110, 231, 183);
+  doc.rect(0, 0, 210, 3, 'F');
+  doc.setFillColor(56, 189, 248);
+  doc.rect(70, 0, 140, 3, 'F');
 
-    function calculate() {
-        const resultDiv = document.getElementById('result');
-        resultDiv.style.display = 'block';
-        resultDiv.className = 'success';
+  // Title
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(18);
+  doc.setTextColor(15, 23, 42);
+  doc.text('DOTE Regulation 2023', margin, y + 10);
 
-        if (currentMode === 'semester') {
-            let totalPoints = 0, totalCredits = 0;
-            document.querySelectorAll('.subject-row').forEach(row => {
-                const credit = parseFloat(row.querySelector('.sub-credit').value);
-                const grade = row.querySelector('.sub-grade').value;
-                if (credit && grade) {
-                    totalPoints += credit * grades[grade];
-                    totalCredits += credit;
-                }
-            });
-            if (totalCredits === 0) return alert("Enter valid credits and grades.");
-            const gpa = (totalPoints / totalCredits).toFixed(2);
-            resultDiv.innerHTML = `<strong>Semester GPA: ${gpa}</strong>`;
-        } else {
-            const inputs = document.querySelectorAll('.gpa-input');
-            let sumGPA = 0, count = 0;
-            inputs.forEach(input => {
-                if(input.value) {
-                    sumGPA += parseFloat(input.value);
-                    count++;
-                }
-            });
-            if (count === 0) return alert("Enter at least one semester GPA.");
-            const cgpa = (sumGPA / count).toFixed(2);
-            const percentage = (cgpa * 10).toFixed(2);
-            resultDiv.innerHTML = `<strong>CGPA: ${cgpa}</strong><br><strong>Overall Percentage: ${percentage}%</strong>`;
-        }
-    }
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text('Diploma Percentage Calculator — Tamil Nadu', margin, y + 17);
+  doc.text(`Generated: ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})}`, margin, y + 24);
+  doc.text(`Mode: ${state.mode === 'regular' ? 'Regular Entry (Sem 1–6)' : 'Lateral Entry (Sem 3–6)'}  |  Pathway: ${state.pathway}`, margin, y + 31);
+  y += 42;
 
-    renderUI();
+  // Calculate CGPA for PDF
+  const semGPAs = {};
+  let hasRA = false;
+  sems.forEach(s => { const g = calcSemGPA(s); semGPAs[s] = g; if(g===null) hasRA=true; });
+  const validGPAs = Object.values(semGPAs).filter(g => g!==null);
+  const cgpa = validGPAs.length ? validGPAs.reduce((a,b)=>a+b,0)/(state.mode==='regular'?6:4) : 0;
+  const pct = cgpa * 10;
+  const div = getDivision(cgpa, hasRA);
+  const totalCred = sems.reduce((s,sem)=>s+totalCredits(sem),0);
+
+  // Summary box
+  doc.setFillColor(245, 250, 255);
+  doc.roundedRect(margin, y, W, 40, 4, 4, 'F');
+  doc.setDrawColor(110, 231, 183);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(margin, y, W, 40, 4, 4, 'S');
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(15,23,42);
+  doc.text('Overall CGPA', margin+8, y+12);
+  doc.text('Final Percentage', margin+60, y+12);
+  doc.text('Total Credits', margin+115, y+12);
+  doc.text('Class Division', margin+150, y+12);
+
+  doc.setFontSize(18); doc.setTextColor(5,150,105);
+  doc.text(cgpa.toFixed(2), margin+8, y+30);
+  doc.setTextColor(2,132,199);
+  doc.text(pct.toFixed(1)+'%', margin+60, y+30);
+  doc.setTextColor(219,39,119);
+  doc.text(String(totalCred), margin+115, y+30);
+  doc.setFontSize(9); doc.setTextColor(15,23,42);
+  doc.text(div.label, margin+150, y+30, {maxWidth: 38});
+  y += 50;
+
+  // Semester details
+  sems.forEach(sem => {
+    const subs = state.semesters[sem] || [];
+    const gpa = semGPAs[sem];
+
+    if (y > 240) { doc.addPage(); y = margin; }
+
+    // Sem header
+    doc.setFillColor(235, 248, 255);
+    doc.rect(margin, y, W, 10, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(15,23,42);
+    doc.text(`Semester ${sem}`, margin+4, y+7);
+    doc.setTextColor(2,132,199);
+    doc.text(`GPA: ${gpa !== null ? gpa.toFixed(2) : 'RA'}`, margin+W-30, y+7);
+    y += 14;
+
+    // Table headers
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(100);
+    doc.text('#', margin+2, y);
+    doc.text('Subject', margin+12, y);
+    doc.text('Credits', margin+W-44, y);
+    doc.text('Grade', margin+W-28, y);
+    doc.text('GP', margin+W-12, y);
+    y += 5;
+    doc.setDrawColor(200); doc.setLineWidth(0.2);
+    doc.line(margin, y, margin+W, y);
+    y += 4;
+
+    subs.forEach((sub, i) => {
+      if (y > 270) { doc.addPage(); y = margin; }
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(40);
+      doc.text(String(i+1), margin+2, y);
+      doc.text(sub.name.substring(0,35), margin+12, y);
+      doc.text(String(sub.credit), margin+W-44, y);
+      doc.text(sub.grade, margin+W-28, y);
+      doc.text(GRADES[sub.grade] !== null ? String(GRADES[sub.grade] ?? '—') : 'RA', margin+W-12, y);
+      y += 6;
+    });
+
+    // Total credits row
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(80);
+    doc.text(`Total Credits: ${totalCredits(sem)}`, margin+W-70, y);
+    y += 10;
+  });
+
+  // Footer
+  doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(150);
+  doc.text('This document is auto-generated by the DOTE 2023 Calculator. GPA = Σ(GP×Credit)/ΣCredits | Percentage = CGPA×10', margin, 287);
+
+  doc.save(`DOTE_2023_Result_${new Date().toISOString().slice(0,10)}.pdf`);
+}
 </script>
-
 </body>
 </html>
